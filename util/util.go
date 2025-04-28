@@ -1,7 +1,7 @@
 package util
 
 import (
-	"binanceklinedumper/domain"
+	"binance-tslab-dumper/domain"
 	"encoding/json"
 	"github.com/pkg/errors"
 	"io"

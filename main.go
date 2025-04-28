@@ -1,8 +1,8 @@
 package main
 
 import (
-	"binanceklinedumper/dumper"
-	"binanceklinedumper/util"
+	"binance-tslab-dumper/dumper"
+	"binance-tslab-dumper/util"
 	"context"
 	"flag"
 	"github.com/pkg/errors"

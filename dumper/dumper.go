@@ -1,8 +1,8 @@
 package dumper
 
 import (
-	"binanceklinedumper/formatter"
-	"binanceklinedumper/util"
+	"binance-tslab-dumper/formatter"
+	"binance-tslab-dumper/util"
 	"log"
 	"os"
 	"path"

@@ -1,4 +1,4 @@
-module binanceklinedumper
+module binance-tslab-dumper
 
 go 1.23.4
 

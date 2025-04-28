@@ -1,0 +1,27 @@
+package dumper
+
+import (
+	"encoding/csv"
+	"github.com/pkg/errors"
+	"os"
+	"time"
+)
+
+func (d *Dumper) getFirstWrittenDate() (time.Time, error) {
+	file, err := os.OpenFile(d.fileName, os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		return time.Time{}, nil
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	// skip header
+	if _, err = reader.Read(); err != nil {
+		return time.Time{}, errors.Wrap(err, "failed to read text header")
+	}
+	firstDate, err := d.readDate(reader)
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "failed to read first date")
+	}
+	return firstDate, nil
+}

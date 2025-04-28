@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"binanceklinedumper/domain"
@@ -10,28 +10,30 @@ import (
 	"strings"
 )
 
-func fetchSymbolData(symbolsStr string) ([]string, map[string]domain.Info) {
-	symbols = strings.Split(symbolsStr, ",")
-	symbolInfo = make(map[string]domain.Info, len(symbols))
-	if len(symbols) == 0 {
-		log.Println("No symbols. Requesting all USDT futures from binance")
+var Symbols []string
+var SymbolInfo map[string]domain.Info
+
+func InitSymbolData(symbolsStr string) {
+	Symbols = strings.Split(symbolsStr, ",")
+	SymbolInfo = make(map[string]domain.Info, len(Symbols))
+	if len(Symbols) == 0 {
+		log.Println("No symbols. Requesting all active USDT futures from binance")
 		infos := getSymbolsInfo()
-		symbolInfo = make(map[string]domain.Info, len(infos))
+		SymbolInfo = make(map[string]domain.Info, len(infos))
 		for _, item := range infos {
 			if item.Status != "TRADING" || !strings.HasSuffix(item.Symbol, "USDT") ||
 				strings.Contains(item.Symbol, "_") {
 				continue
 			}
-			symbols = append(symbols, item.Symbol)
-			symbolInfo[item.Symbol] = item
+			Symbols = append(Symbols, item.Symbol)
+			SymbolInfo[item.Symbol] = item
 		}
 	} else {
 		infos := getSymbolsInfo()
 		for _, item := range infos {
-			symbolInfo[item.Symbol] = item
+			SymbolInfo[item.Symbol] = item
 		}
 	}
-	return symbols, symbolInfo
 }
 
 func getSymbolsInfo() []domain.Info {

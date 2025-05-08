@@ -19,7 +19,7 @@ func (d *Dumper) getFirstWrittenDate() (time.Time, error) {
 	if _, err = reader.Read(); err != nil {
 		return time.Time{}, errors.Wrap(err, "failed to read text header")
 	}
-	firstDate, err := d.readDate(reader)
+	firstDate, _, err := d.readData(reader)
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "failed to read first date")
 	}

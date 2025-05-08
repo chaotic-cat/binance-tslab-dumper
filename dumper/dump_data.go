@@ -13,13 +13,9 @@ import (
 	"time"
 )
 
-func (d *Dumper) DumpData(ctx context.Context, lastDate time.Time, monthly bool) error {
+func (d *Dumper) DumpData(ctx context.Context, lastDate time.Time, lastTradeID int64) error {
 	dateStr := lastDate.Format("2006-01-02")
 	timeRange := "daily"
-	if monthly {
-		timeRange = "monthly"
-		dateStr = lastDate.Format("2006-01")
-	}
 	log.Println("Fetching", d.dataType, "data for:", d.symbol, dateStr)
 
 	fileURL, err := d.formatter.GetFileURL(d.symbol, d.period, timeRange, dateStr)
@@ -33,14 +29,14 @@ func (d *Dumper) DumpData(ctx context.Context, lastDate time.Time, monthly bool)
 	}
 	defer csvFile.Close()
 
-	if err = d.dumpFile(ctx, lastDate, csvFile); err != nil {
+	if err = d.dumpFile(ctx, lastDate, lastTradeID, csvFile); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, csvFile io.ReadCloser) error {
+func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, lastTradeID int64, csvFile io.ReadCloser) error {
 	csvReader := csv.NewReader(csvFile)
 	// Skip header
 	_, err := csvReader.Read()
@@ -70,8 +66,7 @@ func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, csvFile io.Re
 		writer.Flush()
 	}()
 
-	lastDate, err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate)
-	if err != nil {
+	if err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate, lastTradeID); err != nil {
 		return errors.Wrapf(err, "failed to save %s for %s %s", d.dataType, d.symbol, d.period)
 	}
 

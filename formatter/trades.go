@@ -20,22 +20,27 @@ const TradesDataType = "trades"
 type Trades struct{}
 
 func (t *Trades) WriteHeader(file *os.File) error {
-	_, err := fmt.Fprintln(file, "<TICKER>,<DATE>,<TIME>,<MSEC>,<TRADENO>,<LAST>,<BID>,<BIDQTY>,<ASK>,<ASKQTY>,<OPER>")
+	//<TICKER>,<DATE>,<TIME>,<MSEC>,<TRADENO>,<LAST>,<OPER>
+	_, err := fmt.Fprintln(file, "<TICKER>,<DATE>,<TIME>,<MSEC>,<TRADENO>,<LAST>,<VOL>,<OPER>")
 	return err
 }
 
-func (t *Trades) GetLastTimeWritten(row []string) (time.Time, error) {
-	if len(row) < 10 {
-		return time.Time{}, errors.New("invalid file format")
+func (t *Trades) GetLastTimeWritten(row []string) (time.Time, int64, error) {
+	if len(row) < 8 {
+		return time.Time{}, 0, errors.New("invalid file format")
 	}
 
 	timeStr := fmt.Sprintf("%s,%s,%s", row[1], row[2], row[3])
 	tradeTime, err := time.Parse("20060102,150405,000", timeStr)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "Error parsing last kline time")
+		return time.Time{}, 0, errors.Wrap(err, "Error parsing last trade time")
+	}
+	lastTrade, err := strconv.ParseInt(row[4], 10, 64)
+	if err != nil {
+		return time.Time{}, 0, errors.Wrap(err, "Error parsing last trade id")
 	}
 
-	return tradeTime, nil
+	return tradeTime, lastTrade, nil
 }
 
 func (t *Trades) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
@@ -49,11 +54,11 @@ func (t *Trades) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (t *Trades) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time) (time.Time, error) {
+func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastWriteData time.Time, lastTradeID int64) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return lastDate, ctx.Err()
+			return ctx.Err()
 		default:
 		}
 
@@ -66,7 +71,7 @@ func (t *Trades) Write(ctx context.Context, symbol string, period string, csvRea
 			continue
 		}
 		if len(row) < 6 {
-			return lastDate, errors.Wrapf(err, "failed to parse row %q", row[0])
+			return errors.Wrapf(err, "failed to parse row %q", row[0])
 		}
 
 		openTimeMs, err := strconv.ParseInt(row[4], 10, 64)
@@ -74,36 +79,29 @@ func (t *Trades) Write(ctx context.Context, symbol string, period string, csvRea
 			log.Printf("Error parsing open_time: %v", err)
 			continue
 		}
+
 		t := time.UnixMilli(openTimeMs).UTC()
-		if !lastDate.IsZero() && !t.After(lastDate) {
-			continue
-		}
-		lastDate = t
 		date := t.Format("20060102")
 		timestamp := t.Format("150405")
 		msec := strings.Split(t.Format(time.StampMilli), ".")[1]
 		id := row[0]
-		price := row[1]
-		var ask = "0.0"
-		var askQTY = "0.0"
-		var bid = "0.0"
-		var bidQTY = "0.0"
-		var oper string
-		if strings.ToUpper(row[5]) == "TRUE" {
-			bid = row[2]
-			bidQTY = row[3]
-			oper = "B"
-		} else {
-			ask = row[2]
-			askQTY = row[3]
-			oper = "S"
+		idParsed, _ := strconv.ParseInt(id, 10, 64)
+		if lastTradeID >= idParsed {
+			continue
 		}
-		err = writer.Write([]string{symbol, date, timestamp, msec, id, price, bid, bidQTY, ask, askQTY, oper})
+		lastTradeID = idParsed
+		price := row[1]
+		qty := row[2]
+		oper := "S"
+		if strings.ToUpper(row[5]) == "TRUE" {
+			oper = "B"
+		}
+		err = writer.Write([]string{symbol, date, timestamp, msec, id, price, qty, oper})
 		if err != nil {
 			log.Fatalf("Error writing to CSV: %v", err)
 		}
 	}
-	return lastDate, nil
+	return nil
 }
 
 func (t *Trades) GetFileName(dir string, symbol string, period string) string {

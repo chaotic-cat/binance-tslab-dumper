@@ -24,18 +24,18 @@ func (k *Klines) WriteHeader(file *os.File) error {
 	return err
 }
 
-func (k *Klines) GetLastTimeWritten(row []string) (time.Time, error) {
+func (k *Klines) GetLastTimeWritten(row []string) (time.Time, int64, error) {
 	if len(row) < 9 {
-		return time.Time{}, errors.New("invalid file format")
+		return time.Time{}, -1, errors.New("invalid file format")
 	}
 
 	timeStr := row[2] + row[3]
 	klineTime, err := time.Parse("20060102150405", timeStr)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "Error parsing last kline time")
+		return time.Time{}, -1, errors.Wrap(err, "Error parsing last kline time")
 	}
 
-	return klineTime, nil
+	return klineTime, -1, nil
 }
 
 func (k *Klines) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
@@ -49,11 +49,11 @@ func (k *Klines) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time) (time.Time, error) {
+func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return lastDate, nil
+			return nil
 		default:
 		}
 
@@ -87,7 +87,7 @@ func (k *Klines) Write(ctx context.Context, symbol string, period string, csvRea
 			log.Printf("Error writing to CSV: %v", err)
 		}
 	}
-	return lastDate, nil
+	return nil
 }
 
 func (k *Klines) GetFileName(dir string, symbol string, period string) string {

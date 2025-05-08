@@ -23,7 +23,7 @@ func main() {
 	var dataType string
 	var dataDir string
 
-	flag.StringVar(&symbolsStr, "symbols", "BTCUSDT,ETHUSDT,SOLUSDT", "Comma-separated list of symbols")
+	flag.StringVar(&symbolsStr, "symbols", "", "Comma-separated list of symbols")
 	flag.StringVar(&period, "period", "1m", "Kline period (e.g., 1m, 5m)")
 	flag.StringVar(&start, "start", "2024-01-01", "Start date (YYYY-MM-DD)")
 	flag.StringVar(&end, "end", "", "End date (YYYY-MM-DD)")

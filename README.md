@@ -26,4 +26,4 @@ If no symbols are specified - it will download data for all tradable futures wit
 
 If specified data is less than first date in the file for a symbol - it will delete the file and create file with earlier data. 
 
-It will download data and create in a trades, klines or metrics directory. After that you can specify offline TEXT data source in the TSLab.
+It will download data and create a file in a trades, klines or metrics directory. After that you can specify as an offline TEXT data source in the TSLab.

@@ -22,18 +22,18 @@ func (m *Metrics) WriteHeader(file *os.File) error {
 	return err
 }
 
-func (m *Metrics) GetLastTimeWritten(row []string) (time.Time, error) {
+func (m *Metrics) GetLastTimeWritten(row []string) (time.Time, int64, error) {
 	if len(row) < 4 {
-		return time.Time{}, errors.New("invalid file format")
+		return time.Time{}, 0, errors.New("invalid file format")
 	}
 
 	timeStr := row[1] + row[2]
 	metricTime, err := time.Parse("20060102150405", timeStr)
 	if err != nil {
-		return time.Time{}, errors.Wrap(err, "Error parsing last kline time")
+		return time.Time{}, 0, errors.Wrap(err, "Error parsing last kline time")
 	}
 
-	return metricTime, nil
+	return metricTime, 0, nil
 }
 
 func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
@@ -47,11 +47,11 @@ func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dat
 	return fileURL, nil
 }
 
-func (m *Metrics) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time) (time.Time, error) {
+func (m *Metrics) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) error {
 	for {
 		select {
 		case <-ctx.Done():
-			return lastDate, nil
+			return nil
 		default:
 		}
 
@@ -81,7 +81,7 @@ func (m *Metrics) Write(ctx context.Context, symbol string, period string, csvRe
 			log.Printf("Error writing to CSV: %v", err)
 		}
 	}
-	return lastDate, nil
+	return nil
 }
 
 func (m *Metrics) GetFileName(dir string, symbol string, period string) string {

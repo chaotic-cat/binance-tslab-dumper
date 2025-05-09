@@ -4,12 +4,10 @@ This is a dumper of a Binance perpetual futures historical data designed to crea
 At present, this dumper works for the following types of Binance data:
  - Klines: 
    - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/klines 
-   - Monthly https://data.binance.vision/?prefix=data/futures/um/monthly/klines
  - Trades: 
    - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/trades 
-   - Monthly: https://data.binance.vision/?prefix=data/futures/um/monthly/trades
- - Metrics(OI only): 
-   - Daily only: https://data.binance.vision/?prefix=data/futures/um/daily/metrics
+ - Metrics: 
+   - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/metrics
 
 TSLab text file format description: https://doc.tslab.pro/tslab/eng/data-providers/historical-data/text-files-with-historical-data
 

@@ -3,7 +3,9 @@ package dumper
 import (
 	"binance-tslab-dumper/formatter"
 	"binance-tslab-dumper/util"
+	"github.com/pkg/errors"
 	"log"
+	"os"
 	"path"
 	"time"
 )
@@ -24,6 +26,9 @@ func New(dataDir string, symbol string, dataType string, period string, startDat
 	}
 
 	dataDir = path.Join(dataDir, dataType)
+	if err := os.MkdirAll(dataDir, os.ModePerm); err != nil {
+		log.Fatal(errors.Wrapf(err, "failed to create directory %s", dataDir))
+	}
 	formatter := formatter.New(dataType)
 	if formatter == nil {
 		log.Fatalln("invalid data type:", dataType)

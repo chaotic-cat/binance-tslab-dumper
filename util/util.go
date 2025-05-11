@@ -14,9 +14,7 @@ var Symbols []string
 var SymbolInfo map[string]domain.Info
 
 func InitSymbolData(symbolsStr string) {
-	Symbols = strings.Split(symbolsStr, ",")
-	SymbolInfo = make(map[string]domain.Info, len(Symbols))
-	if len(Symbols) == 0 {
+	if len(symbolsStr) == 0 {
 		log.Println("No symbols. Requesting all active USDT futures from binance")
 		infos := getSymbolsInfo()
 		SymbolInfo = make(map[string]domain.Info, len(infos))
@@ -29,6 +27,8 @@ func InitSymbolData(symbolsStr string) {
 			SymbolInfo[item.Symbol] = item
 		}
 	} else {
+		Symbols = strings.Split(symbolsStr, ",")
+		SymbolInfo = make(map[string]domain.Info, len(Symbols))
 		infos := getSymbolsInfo()
 		for _, item := range infos {
 			SymbolInfo[item.Symbol] = item

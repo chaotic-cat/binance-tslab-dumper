@@ -23,4 +23,4 @@ clean:
 
 .PHONY: release
 release:
-	goreleaser --clean
+	goreleaser release --clean

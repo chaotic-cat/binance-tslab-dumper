@@ -2,9 +2,10 @@ package dumper
 
 import (
 	"encoding/csv"
-	"github.com/pkg/errors"
 	"os"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 func (d *Dumper) getFirstWrittenDate() (time.Time, error) {

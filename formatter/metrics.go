@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/url"
 	"os"
 	"path"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const MetricsDataType = "metrics"
@@ -47,11 +48,11 @@ func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dat
 	return fileURL, nil
 }
 
-func (m *Metrics) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) error {
+func (m *Metrics) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return time.Time{}, 0, nil
 		default:
 		}
 
@@ -81,7 +82,7 @@ func (m *Metrics) Write(ctx context.Context, symbol string, _ string, csvReader 
 			log.Printf("Error writing to CSV: %v", err)
 		}
 	}
-	return nil
+	return lastDate, 0, nil
 }
 
 func (m *Metrics) GetFileName(dir string, symbol string, period string) string {

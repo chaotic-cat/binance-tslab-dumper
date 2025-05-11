@@ -4,7 +4,6 @@ import (
 	"binance-tslab-dumper/formatter"
 	"binance-tslab-dumper/util"
 	"log"
-	"os"
 	"path"
 	"time"
 )
@@ -25,13 +24,13 @@ func New(dataDir string, symbol string, dataType string, period string, startDat
 	}
 
 	dataDir = path.Join(dataDir, dataType)
-	os.MkdirAll(dataDir, os.ModePerm)
 	formatter := formatter.New(dataType)
 	if formatter == nil {
 		log.Fatalln("invalid data type:", dataType)
 	}
 
 	return &Dumper{
+		dataType:  dataType,
 		formatter: formatter,
 		symbol:    symbol,
 		period:    period,

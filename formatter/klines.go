@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const KlinesDataType = "klines"
@@ -49,11 +50,11 @@ func (k *Klines) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) error {
+func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return lastDate, 0, nil
 		default:
 		}
 
@@ -87,7 +88,7 @@ func (k *Klines) Write(ctx context.Context, symbol string, period string, csvRea
 			log.Printf("Error writing to CSV: %v", err)
 		}
 	}
-	return nil
+	return lastDate, 0, nil
 }
 
 func (k *Klines) GetFileName(dir string, symbol string, period string) string {

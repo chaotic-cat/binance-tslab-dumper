@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/url"
@@ -13,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const TradesDataType = "trades"
@@ -54,11 +55,11 @@ func (t *Trades) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastWriteData time.Time, lastTradeID int64) error {
+func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastWriteData time.Time, lastTradeID int64) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return lastWriteData, lastTradeID, nil
 		default:
 		}
 
@@ -71,7 +72,7 @@ func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *
 			continue
 		}
 		if len(row) < 6 {
-			return errors.Wrapf(err, "failed to parse row %q", row[0])
+			return lastWriteData, lastTradeID, errors.Wrapf(err, "failed to parse row %q", row[0])
 		}
 
 		openTimeMs, err := strconv.ParseInt(row[4], 10, 64)
@@ -81,6 +82,7 @@ func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *
 		}
 
 		t := time.UnixMilli(openTimeMs).UTC()
+		lastWriteData = t
 		date := t.Format("20060102")
 		timestamp := t.Format("150405")
 		msec := strings.Split(t.Format(time.StampMilli), ".")[1]
@@ -101,7 +103,7 @@ func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *
 			log.Fatalf("Error writing to CSV: %v", err)
 		}
 	}
-	return nil
+	return lastWriteData, lastTradeID, nil
 }
 
 func (t *Trades) GetFileName(dir string, symbol string, period string) string {

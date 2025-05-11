@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 )
 
 func (d *Dumper) ProcessSymbol(ctx context.Context) interface{} {
@@ -12,7 +13,8 @@ func (d *Dumper) ProcessSymbol(ctx context.Context) interface{} {
 		log.Fatalf("Error getting first date: %v", err)
 	}
 
-	lastDate := d.startDate
+	var lastDate time.Time
+	currentDate := d.startDate
 	var lastTradeID int64
 	if !firstDate.IsZero() && firstDate.Before(d.startDate) && firstDate.AddDate(0, 0, 1).Before(d.startDate) {
 		log.Println("First date is before start date. Removed:", d.fileName)
@@ -22,16 +24,18 @@ func (d *Dumper) ProcessSymbol(ctx context.Context) interface{} {
 			log.Println("File is in wrong format. Removed:", d.fileName)
 			os.Remove(d.fileName)
 		}
-		lastDate = d.startDate
+	}
+	if !lastDate.IsZero() {
+		currentDate = lastDate.Truncate(24 * time.Hour)
 	}
 
-	for ; !lastDate.After(d.endDate); lastDate = lastDate.AddDate(0, 0, 1) {
+	for ; !currentDate.After(d.endDate); currentDate = currentDate.AddDate(0, 0, 1) {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
 		}
-		if err = d.DumpData(ctx, lastDate, lastTradeID); err != nil {
+		if lastDate, lastTradeID, err = d.DumpData(ctx, currentDate, lastDate, lastTradeID); err != nil {
 			log.Printf("Error fetching daily data for %s[%v]: %v", d.symbol, lastDate, err)
 		}
 	}

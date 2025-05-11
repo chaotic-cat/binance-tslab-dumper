@@ -5,72 +5,77 @@ import (
 	"bytes"
 	"context"
 	"encoding/csv"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
-func (d *Dumper) DumpData(ctx context.Context, lastDate time.Time, lastTradeID int64) error {
-	dateStr := lastDate.Format("2006-01-02")
+func (d *Dumper) DumpData(ctx context.Context, currentDate time.Time, lastDate time.Time, lastTradeID int64) (time.Time, int64, error) {
+	dateStr := currentDate.Format("2006-01-02")
 	timeRange := "daily"
 	log.Println("Fetching", d.dataType, "data for:", d.symbol, dateStr)
 
 	fileURL, err := d.formatter.GetFileURL(d.symbol, d.period, timeRange, dateStr)
 	if err != nil {
-		return err
+		return time.Time{}, 0, err
 	}
 
 	csvFile, err := httpZipToCsvFile(ctx, fileURL, timeRange, d.symbol)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read csv data for %s %s", d.symbol, timeRange)
+		return time.Time{}, 0, errors.Wrapf(err, "failed to read csv data for %s %s", d.symbol, timeRange)
 	}
 	defer csvFile.Close()
 
-	if err = d.dumpFile(ctx, lastDate, lastTradeID, csvFile); err != nil {
-		return err
+	lastDate, lastTradeID, err = d.dumpFile(ctx, lastDate, lastTradeID, csvFile)
+	if err != nil {
+		return time.Time{}, 0, err
 	}
 
-	return nil
+	return lastDate, lastTradeID, nil
 }
 
-func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, lastTradeID int64, csvFile io.ReadCloser) error {
+func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, lastTradeID int64, csvFile io.ReadCloser) (time.Time, int64, error) {
 	csvReader := csv.NewReader(csvFile)
 	// Skip header
 	_, err := csvReader.Read()
 	if err != nil {
 		csvFile.Close()
-		return errors.Wrapf(err, "Error skipping CSV header")
+		return time.Time{}, 0, errors.Wrapf(err, "Error skipping CSV header")
 	}
-	file, err := os.OpenFile(d.fileName, os.O_RDWR|os.O_APPEND, os.ModePerm)
+	file, err := os.OpenFile(d.fileName, os.O_RDWR, os.ModePerm)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// not exists. create new
-			if file, err = os.OpenFile(d.fileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, os.ModePerm); err != nil {
-				return errors.Wrapf(err, "Error creating file %s", d.fileName)
+			if file, err = os.OpenFile(d.fileName, os.O_RDWR|os.O_CREATE, os.ModePerm); err != nil {
+				return time.Time{}, 0, errors.Wrapf(err, "Error creating file %s", d.fileName)
 			}
 			// write header
 			if err = d.formatter.WriteHeader(file); err != nil {
 				log.Fatalln(errors.Wrapf(err, "failed to write header to file %s", file.Name()))
 			}
 		} else {
-			return errors.Wrapf(err, "failed to open file %s", d.fileName)
+			return time.Time{}, 0, errors.Wrapf(err, "failed to open file %s", d.fileName)
 		}
 	}
-	defer file.Close()
+
+	file.Seek(0, 2)
 
 	writer := csv.NewWriter(file)
 	defer func() {
 		writer.Flush()
+		file.Close()
 	}()
 
-	if err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate, lastTradeID); err != nil {
-		return errors.Wrapf(err, "failed to save %s for %s %s", d.dataType, d.symbol, d.period)
+	lastDate, lastTradeID, err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate, lastTradeID)
+	if err != nil {
+		return time.Time{}, 0, errors.Wrapf(err, "failed to save %s for %s %s", d.dataType, d.symbol, d.period)
 	}
 
-	return nil
+	return lastDate, lastTradeID, err
 }
 
 func httpZipToCsvFile(ctx context.Context, url string, periodStr string, symbol string) (io.ReadCloser, error) {

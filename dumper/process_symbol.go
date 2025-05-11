@@ -36,7 +36,7 @@ func (d *Dumper) ProcessSymbol(ctx context.Context) interface{} {
 		default:
 		}
 		if lastDate, lastTradeID, err = d.DumpData(ctx, currentDate, lastDate, lastTradeID); err != nil {
-			log.Printf("Error fetching daily data for %s[%v]: %v", d.symbol, lastDate, err)
+			log.Printf("Error fetching daily data for %s[%v]: %v", d.symbol, currentDate, err)
 		}
 	}
 

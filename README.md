@@ -15,7 +15,7 @@ TSLab text file format description: https://doc.tslab.pro/tslab/eng/data-provide
 ### Trades
 `binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=trades`
 ### Klines
-`binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=klines`
+`binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=klines --period=1m`
 ### Metrics
 `binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=metrics`
 

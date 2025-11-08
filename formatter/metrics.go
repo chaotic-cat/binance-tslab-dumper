@@ -48,7 +48,7 @@ func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dat
 	return fileURL, nil
 }
 
-func (m *Metrics) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) (time.Time, int64, error) {
+func (m *Metrics) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, lastTradeID int64, additionalType string) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():

@@ -53,7 +53,7 @@ func (k *Klines) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, _ int64) (time.Time, int64, error) {
+func (k *Klines) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, lastTradeID int64, additionalType string) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -74,7 +74,13 @@ func (k *Klines) Write(ctx context.Context, symbol string, period string, csvRea
 			log.Printf("Error parsing open_time: %v", err)
 			continue
 		}
-		t := time.UnixMilli(openTimeMs).UTC()
+		
+		var t time.Time
+		if additionalType == "futures" {
+			t = time.UnixMilli(openTimeMs).UTC()
+		} else {
+			t = time.UnixMicro(openTimeMs).UTC()
+		}
 		if !lastDate.IsZero() && !t.After(lastDate) {
 			continue
 		}

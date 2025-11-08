@@ -58,7 +58,7 @@ func (t *Trades) GetFileURL(symbol string, period string, timeRange string, date
 	return fileURL, nil
 }
 
-func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *csv.Reader, writer *csv.Writer, lastWriteData time.Time, lastTradeID int64) (time.Time, int64, error) {
+func (t *Trades) Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastWriteData time.Time, lastTradeID int64, additionalType string) (time.Time, int64, error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -84,7 +84,12 @@ func (t *Trades) Write(ctx context.Context, symbol string, _ string, csvReader *
 			continue
 		}
 
-		t := time.UnixMilli(openTimeMs).UTC()
+		var t time.Time
+		if additionalType == "futures" {
+			t = time.UnixMilli(openTimeMs).UTC()
+		} else {
+			t = time.UnixMicro(openTimeMs).UTC()
+		}
 		lastWriteData = t
 		date := t.Format("20060102")
 		timestamp := t.Format("150405")

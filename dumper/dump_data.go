@@ -41,10 +41,12 @@ func (d *Dumper) DumpData(ctx context.Context, currentDate time.Time, lastDate t
 func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, lastTradeID int64, csvFile io.ReadCloser) (time.Time, int64, error) {
 	csvReader := csv.NewReader(csvFile)
 	// Skip header
-	_, err := csvReader.Read()
-	if err != nil {
-		csvFile.Close()
-		return time.Time{}, 0, errors.Wrapf(err, "Error skipping CSV header")
+	if d.additionalType == "futures" {
+		_, err := csvReader.Read()
+		if err != nil {
+			csvFile.Close()
+			return time.Time{}, 0, errors.Wrapf(err, "Error skipping CSV header")
+		}
 	}
 	file, err := os.OpenFile(d.fileName, os.O_RDWR, os.ModePerm)
 	if err != nil {
@@ -70,7 +72,7 @@ func (d *Dumper) dumpFile(ctx context.Context, lastDate time.Time, lastTradeID i
 		file.Close()
 	}()
 
-	lastDate, lastTradeID, err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate, lastTradeID)
+	lastDate, lastTradeID, err = d.formatter.Write(ctx, d.symbol, d.period, csvReader, writer, lastDate, lastTradeID, d.additionalType)
 	if err != nil {
 		return time.Time{}, 0, errors.Wrapf(err, "failed to save %s for %s %s", d.dataType, d.symbol, d.period)
 	}

@@ -9,7 +9,7 @@ import (
 
 type Formatter interface {
 	GetFileName(dir string, symbol string, period string) string
-	Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, lastTradeID int64) (time.Time, int64, error)
+	Write(ctx context.Context, symbol string, period string, csvReader *csv.Reader, writer *csv.Writer, lastDate time.Time, lastTradeID int64, additionalType string) (time.Time, int64, error)
 	GetFileURL(symbol string, period string, timeRange string, dateStr string, additionalType string) (string, error)
 	GetLastTimeWritten(row []string) (time.Time, int64, error)
 	WriteHeader(file *os.File) error

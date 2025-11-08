@@ -2,22 +2,33 @@
 This is a dumper of a Binance perpetual futures historical data designed to create files for TSLab
 
 At present, this dumper works for the following types of Binance data:
- - Klines: 
-   - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/klines 
+ - Klines:
+   - Spot
+     - Daily: https://data.binance.vision/?prefix=data/futures/daily/klines
+   - Futures:
+     - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/klines
  - Trades: 
-   - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/trades 
+   - Spot
+     - Daily: https://data.binance.vision/?prefix=data/futures/daily/trades
+   - Futures
+     - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/trades 
  - Metrics: 
-   - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/metrics
+   - Futures:
+     - Daily: https://data.binance.vision/?prefix=data/futures/um/daily/metrics
 
 TSLab text file format description: https://doc.tslab.pro/tslab/eng/data-providers/historical-data/text-files-with-historical-data
 
 ## How to use
-### Trades
-`binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=trades`
-### Klines
-`binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=klines --period=1m`
+### Trades futures
+`binance-tslab-dumper --symbols=ADAUSDT,XRPUSDT --futures=true --start=2025-11-01 --parallel=2 --type=trades`
+### Trades spot
+`binance-tslab-dumper --symbols=ADAUSDT,XRPUSDT --futures=false --start=2025-11-01 --parallel=2 --type=trades`
+### Klines Futures
+`binance-tslab-dumper --symbols=ADAUSDT,XRPUSDT --futures=true --start=2025-11-01 --parallel=2 --type=klines --period=1m`
+### Klines spot
+`binance-tslab-dumper --symbols=ADAUSDT,XRPUSDT --futures=false --start=2025-11-01 --parallel=2 --type=klines --period=1m`
 ### Metrics
-`binance-tslab-dumper --symbols=1000WHYUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=metrics`
+`binance-tslab-dumper --symbols=ADAUSDT,XRPUSDT --start=2025-01-01 --parallel=2 --type=metrics`
 
 If no symbols are specified - it will download data for all tradable futures with USDT suffix:
 `binance-tslab-dumper --start=2025-01-01 --parallel=2 --type=metrics`

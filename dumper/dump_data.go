@@ -17,9 +17,9 @@ import (
 func (d *Dumper) DumpData(ctx context.Context, currentDate time.Time, lastDate time.Time, lastTradeID int64) (time.Time, int64, error) {
 	dateStr := currentDate.Format("2006-01-02")
 	timeRange := "daily"
-	log.Println("Fetching", d.dataType, "data for:", d.symbol, dateStr)
+	log.Println("Fetching", d.dataType, d.additionalType, "data for:", d.symbol, dateStr)
 
-	fileURL, err := d.formatter.GetFileURL(d.symbol, d.period, timeRange, dateStr)
+	fileURL, err := d.formatter.GetFileURL(d.symbol, d.period, timeRange, dateStr, d.additionalType)
 	if err != nil {
 		return time.Time{}, 0, err
 	}

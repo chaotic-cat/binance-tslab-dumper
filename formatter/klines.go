@@ -39,8 +39,11 @@ func (k *Klines) GetLastTimeWritten(row []string) (time.Time, int64, error) {
 	return klineTime, -1, nil
 }
 
-func (k *Klines) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
-	fileURL := "https://data.binance.vision/data/futures/um"
+func (k *Klines) GetFileURL(symbol string, period string, timeRange string, dateStr string, additionalType string) (string, error) {
+	fileURL := "https://data.binance.vision/data/" + additionalType
+	if additionalType == "futures" {
+		fileURL += "/um"
+	}
 	filePath := fmt.Sprintf("%s/klines/%s/%s/%s-%s-%s.zip", timeRange, symbol, period, symbol, period, dateStr)
 
 	var err error

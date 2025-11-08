@@ -44,8 +44,11 @@ func (t *Trades) GetLastTimeWritten(row []string) (time.Time, int64, error) {
 	return tradeTime, lastTrade, nil
 }
 
-func (t *Trades) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
-	fileURL := "https://data.binance.vision/data/futures/um"
+func (t *Trades) GetFileURL(symbol string, period string, timeRange string, dateStr string, additionalType string) (string, error) {
+	fileURL := "https://data.binance.vision/data/" + additionalType
+	if additionalType == "futures" {
+		fileURL += "/um"
+	}
 	filePath := fmt.Sprintf("%s/trades/%s/%s-trades-%s.zip", timeRange, symbol, symbol, dateStr)
 
 	var err error

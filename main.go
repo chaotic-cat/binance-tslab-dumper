@@ -1,17 +1,19 @@
 package main
 
 import (
-	"binance-tslab-dumper/dumper"
-	"binance-tslab-dumper/util"
 	"context"
 	"flag"
-	"github.com/pkg/errors"
 	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
+
+	"binance-tslab-dumper/dumper"
+	"binance-tslab-dumper/util"
 )
 
 func main() {
@@ -22,8 +24,10 @@ func main() {
 	var parallel int
 	var dataType string
 	var dataDir string
+	var futures bool
 
 	flag.StringVar(&symbolsStr, "symbols", "", "Comma-separated list of symbols")
+	flag.BoolVar(&futures, "futures", true, "Toggle futures or spot")
 	flag.StringVar(&period, "period", "1m", "Kline period (e.g., 1m, 5m)")
 	flag.StringVar(&start, "start", "2024-01-01", "Start date (YYYY-MM-DD)")
 	flag.StringVar(&end, "end", "", "End date (YYYY-MM-DD)")
@@ -52,7 +56,7 @@ func main() {
 		log.Fatal(errors.Wrapf(err, "failed to create data directory in path: %s", dataDir))
 	}
 
-	processSymbols(ctx, &wg, workers, start, end, dataDir, period, dataType)
+	processSymbols(ctx, &wg, workers, start, end, dataDir, period, dataType, futures)
 
 	wg.Wait()
 	log.Println("Shutting down gracefully...")
@@ -60,7 +64,7 @@ func main() {
 	log.Println("All workers done, exiting.")
 }
 
-func processSymbols(ctx context.Context, wg *sync.WaitGroup, workers chan struct{}, start string, end string, dataDir string, period string, dataType string) {
+func processSymbols(ctx context.Context, wg *sync.WaitGroup, workers chan struct{}, start string, end string, dataDir string, period string, dataType string, futures bool) {
 	startDate, err := time.Parse("2006-01-02", start)
 	if err != nil {
 		log.Fatalln("Error parsing start date:", err)
@@ -88,7 +92,7 @@ func processSymbols(ctx context.Context, wg *sync.WaitGroup, workers chan struct
 
 			workers <- struct{}{}
 			defer func() { <-workers }()
-			dataDumper := dumper.New(dataDir, symbol, dataType, period, startDate, endDate)
+			dataDumper := dumper.New(dataDir, symbol, dataType, period, startDate, endDate, futures)
 			if processErr := dataDumper.ProcessSymbol(ctx); processErr != nil {
 				log.Println(processErr)
 			}

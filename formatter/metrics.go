@@ -37,7 +37,7 @@ func (m *Metrics) GetLastTimeWritten(row []string) (time.Time, int64, error) {
 	return metricTime, 0, nil
 }
 
-func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dateStr string) (string, error) {
+func (m *Metrics) GetFileURL(symbol string, period string, timeRange string, dateStr string, additionalType string) (string, error) {
 	fileURL := "https://data.binance.vision/data/futures/um"
 	filePath := fmt.Sprintf("%s/metrics/%s/%s-metrics-%s.zip", timeRange, symbol, symbol, dateStr)
 
